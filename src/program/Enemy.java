@@ -1,5 +1,6 @@
 package program;
 
+import java.util.ArrayList;
 import java.util.Random;
 
 public class Enemy extends Entity implements Combat{
@@ -8,12 +9,14 @@ public class Enemy extends Entity implements Combat{
 
     private double dmg;
 
+    String[] names = {"mBob","Steve","Howard","Marduk","Memchok","Frank"};
     String[] diff = {"easy","medium","hard"};
     Random rand = new Random();
 
 
     public Enemy() {
         super();
+        this.name= names[rand.nextInt(5)];
         this.difficulty = diff[rand.nextInt(diff.length)];
         doPower();
     }
@@ -26,9 +29,9 @@ public class Enemy extends Entity implements Combat{
 
     private void doPower(){
         switch (this.difficulty){
-            case "easy" -> {this.crit=6;this.sdc=25;}
-            case "medium" -> {this.crit=10;this.sdc=50;}
-            case "hard" -> {this.crit=15;this.sdc=75;}
+            case "easy" -> {this.crit=6;this.sdc=25;this.ap=1;}
+            case "medium" -> {this.crit=10;this.sdc=50;this.ap=2;}
+            case "hard" -> {this.crit=15;this.sdc=75;this.ap=4;}
             default -> {this.crit=6;this.sdc=25;}
         }
     }
@@ -52,7 +55,7 @@ public class Enemy extends Entity implements Combat{
             return;
         }
 
-        normalAttack();
+        attack();
     }
 
     //                                       mechanics
@@ -61,39 +64,48 @@ public class Enemy extends Entity implements Combat{
             return rand.nextInt(100)<getCrit();
     }
 
-    private void normalAttack(){
+    private void attack(){
         double dmg = 7+rand.nextInt(10);
         if (crit()) dmg *= 1.5;
         this.dmg=dmg;
     }
 
+    //heavy attack cost 1 AP, if ap insufficient - do attack() instead
     private void heavyAttack(){
+        if (getAp()>=1){
         double dmg = 16+rand.nextInt(10);
         if (crit()) dmg *= 1.5;
         this.dmg=dmg;
+        ap--;
+        }
+        else{
+            System.out.println("Fatigued heavy attack!");
+            attack();
+        }
+
     }
 
-    @Override
-    public void block() {
+    private void block() {
         if (getAp()>=1){
+            System.out.println(getName()+" blocks!");
             isBlocking=true;
-            setAp(getAp()-1);
+            blockCharges+=2;
+            ap--;
         }
     }
 
     //special - recovers 50% of the health lost to the last hit taken
-    @Override
-    public void special() {
+
+    private void special() {
         if (getAp() >= 2) {
             setHp(getHp() + (lastHit * 0.5));
-            setAp(getAp() - 2);
+            ap--;
             System.out.println(getClass().getSimpleName() + " has used Recovery!");
         }
     }
 
     //                           functional
 
-    @Override
     public double dmgDone() {
         return dmg;
     }
@@ -102,25 +114,35 @@ public class Enemy extends Entity implements Combat{
         this.dmg=dmg;
     }
 
-    @Override
-    public void dmgTaken(Combat player) {
+    private void dmgIntake(Combat player) {
         double temp = player.dmgDone();
+        boolean run = true;
 
-        if (isBlocking) temp/=2;
-        setHp(getHp()-temp);
-        if (checkLife()){
-            System.out.println(getClass().getSimpleName()+" ("+getDifficulty()+") took "+temp+" dmg");
-            System.out.println("Enemy ("+getDifficulty()+") slain, proceeding to next round!");
-            return;
+        while (run) {
+            if (isBlocking) temp /= 2;
+            setHp(getHp() - temp);
+            if (checkLife()) {
+                System.out.println(this.name + " (" + getDifficulty() + ") took " + temp + " dmg");
+                System.out.println("Enemy (" + getDifficulty() + ") slain, proceeding to next round!");
+                break;
+            }
+            lastHit = temp;
+            System.out.println();
+            System.out.println(this.name + " (" + getDifficulty() + ") took " + temp + " dmg");
+            System.out.println(getHp() + " hp: " + this.getAp() + " ap " + getBlockCharges() + " blocks left" + "\n_____________");
+            if (isBlocking&&blockCharges>=1) blockCharges--;
+            break;
         }
-        lastHit=temp;
-        System.out.println();
-        System.out.println(getClass().getSimpleName()+" ("+getDifficulty()+") took "+temp+" dmg");
-        System.out.println(getHp()+" hp: "+this.getAp()+" ap");
     }
 
-    @Override
     public boolean checkLife() {
-        return getHp() <= 0;
+            return getHp() <= 0;
     }
+
+    public void getDmgIntake(Combat player){
+        dmgIntake(player);
+    }
+
+
+
 }

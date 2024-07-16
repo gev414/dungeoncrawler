@@ -7,6 +7,7 @@ public abstract class Entity {
 
     protected double lastHit;
     protected boolean isBlocking;
+    protected int blockCharges;
 
     protected int crit;
 
@@ -26,7 +27,7 @@ public abstract class Entity {
     //                constructor for the enemy
     public Entity() {
         this.hp = 100;
-        this.ap = 0;
+  //      this.ap = 0;
         this.lastHit = 0;
         this.isBlocking = false;
     }
@@ -67,6 +68,5 @@ public abstract class Entity {
         return false;
     }
 
-
-
+    public int getBlockCharges() {return blockCharges;}
 }

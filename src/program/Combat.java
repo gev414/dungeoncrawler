@@ -4,11 +4,21 @@ public interface Combat {
 
     double dmgDone();
 
-    void block();
+    private void attack() {
 
-    void special();
+    }
 
-    void dmgTaken(Combat combatDmg);
+    private void block() {
+
+    }
+
+    private void special() {
+
+    }
+
+    private void dmgIntake(Combat combatDmg) {
+
+    }
 
 
 }

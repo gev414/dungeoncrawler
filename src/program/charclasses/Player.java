@@ -27,6 +27,7 @@ public class Player extends Entity implements Combat {
         double dmg = 7+rand.nextInt(10);
         if (crit()) dmg *= 1.5;
         this.dmg=dmg;
+        ap++;
     }
 
     private void heavyAttack(){
@@ -35,16 +36,16 @@ public class Player extends Entity implements Combat {
         this.dmg=dmg;
     }
 
-    @Override
-    public void block() {
+
+    private void block() {
         if (getAp()>=1){
             isBlocking=true;
             setAp(getAp()-1);
+            blockCharges+=2;
         }
     }
 
-    @Override
-    public void special() {
+    private void special() {
         if (getAp()>=2){
             setHp(getHp()+(lastHit*0.5));
             setAp(getAp()-2);
@@ -61,28 +62,37 @@ public class Player extends Entity implements Combat {
         this.dmg=dmg;
     }
 
-    @Override
-    public void dmgTaken(Combat enemy) {
+
+    private void dmgIntake(Combat enemy) {
       double temp = enemy.dmgDone();
+      boolean run =true;
+
+      while(run){
         if (isBlocking) temp/=2;
         setHp(getHp()-temp);
         if (checkLife()){
             System.out.println(getClass().getSimpleName()+" took "+temp+" dmg");
             System.out.println("You have been slain, game over!");
+            break;
         }
         lastHit=temp;
         System.out.println(getClass().getSimpleName()+" took "+temp+" dmg");
-        System.out.println(getHp()+" hp: "+getAp()+" ap");
-
+        System.out.println(getHp()+" hp: "+getAp()+" ap "+getBlockCharges()+" blocks left"+"\n_____________");
+        if (isBlocking&&blockCharges>=1) blockCharges--;
+        break;
+      }
     }
 
+    public void getDmgIntake(Combat enemy){
+        dmgIntake(enemy);
+    }
     @Override
     public boolean checkLife() {
         return getHp() <= 0;
     }
 
     public void playerInput() throws IOException {
-        System.out.println(getName()+"'s turn!");
+        System.out.println(this.getName()+"'s turn!\nattack|heavy attack|block|special");
         int activity = Integer.parseInt(reader.readLine());
         switch (activity){
             case 1 -> normalAttack();
